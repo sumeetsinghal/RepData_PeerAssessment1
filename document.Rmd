@@ -1,0 +1,123 @@
+#install.packages("knitr")
+#install.packages("ggplot2")
+
+library(knitr)
+
+# Question 1 Code for reading in the dataset and/or processing  data-----------
+
+```{r}
+
+
+library(dplyr)
+library(datasets)
+library(lubridate)
+
+file <- "/Users/sumeetsinghal/sumeet/Coursera/reproducibleSearchWeek2/activity.zip"
+path <- "/Users/sumeetsinghal/sumeet/Coursera/reproducibleSearchWeek2"
+url="https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+setwd(path)
+getwd()
+
+
+download.file(url, file, "curl")
+
+unzip("activity.zip")
+
+activity <- read.csv("activity.csv")
+df = data.frame(activity)
+
+```
+
+## Question 2 Histogram of the total number of steps taken each day  -----------
+
+```{r echo = FALSE}
+df <- df[!is.na(df$steps),]
+aggdata <- aggregate(df$steps, list(df$date), FUN = sum)
+
+hist(aggdata$x)
+#Closing the file
+dev.off()
+
+```
+## Question  3 Mean and median number of steps taken each day  -----------
+
+```{r}
+aggdataMean <- aggregate(df$steps, list(df$date), FUN = mean)
+print("Mean data ")
+print(aggdataMean)
+aggdataMedian <- aggregate(df$steps, list(df$date), FUN = median)
+print("Median data")
+aggdataMedian
+
+```
+
+
+## Question  4 Time series plot of the average number of steps taken  -----------
+
+```{r echo = FALSE}
+plot(aggdataMean$Group.1, aggdataMean$x, type="l" ,ylim=c(0, 100), ylab="steps")
+dev.off()
+
+
+library(dplyr)
+library(ggplot2)
+
+data <- data.frame(
+  day = as.Date(aggdataMean$Group.1),
+  value = aggdataMean$x
+)
+
+
+p <- ggplot(data, aes(x=day, y=value)) + geom_line() + xlab("")
+p
+```
+
+## Question 5 The 5-minute interval that, on average, contains the maximum number of steps -----------
+
+```{r echo = FALSE}
+
+aggdataMeanInterval <- aggregate(df$steps, list(df$interval), FUN = mean)
+
+aggdataMeanInterval[aggdataMeanInterval$x ==max(aggdataMeanInterval$x),]
+```
+
+## Question  6 Code to describe and show a strategy for imputing missing data  -----------
+
+```{r}
+
+df <- df[!is.na(df$steps),]
+
+```
+
+## Question 7 Histogram of the total number of steps taken each day after missing values are imputed  -----------
+
+```{r echo = FALSE}
+
+aggdata <- aggregate(df$steps, list(df$date), FUN = sum)
+hist(aggdata$x)
+```
+
+##Question  8 Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends  
+
+```{r echo = FALSE}
+
+library(lubridate)
+df$date <- as.Date(df$date)
+
+dfweekend <- df[wday(df$date, label=TRUE) == c("Sat","Sun"),]
+dfweekday <- df[!wday(df$date, label=TRUE) == c("Sat","Sun"),]
+
+aggdataMeanIntervalWeekend <- aggregate(dfweekend$steps, list(dfweekend$interval), FUN = mean)
+aggdataMeanIntervalWeekday <- aggregate(dfweekday$steps, list(dfweekday$interval), FUN = mean)
+
+par(mfrow = c(2,1) )
+plot(aggdataMeanIntervalWeekend$Group.1, aggdataMeanIntervalWeekend$x, type="l" ,ylim=c(0, 250), ylab="steps")
+plot(aggdataMeanIntervalWeekday$Group.1, aggdataMeanIntervalWeekday$x, type="l" ,ylim=c(0, 250), ylab="steps")
+```
+
+
+##Question  9 All of the R code needed to reproduce the results (numbers, plots, etc.) in the report  -----------
+ 
+
+knit2html("document.Rmd")
+browseURL("document.html")
